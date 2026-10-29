@@ -1,0 +1,127 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self'">
+  <title>Vkin</title>
+  <link rel="stylesheet" href="overlay.css">
+</head>
+<body>
+  <div id="app">
+    <header id="bar" class="panel">
+      <button id="runBtn" class="btn primary" title="Start/stop listening">Start</button>
+      <button id="aiPill" class="pill" disabled title="Live AI status unknown"><span id="aiPillTxt">AI …</span><i id="aiWarn" class="wdot hidden"></i></button>
+      <span class="chan"><i id="dotThem" class="dot"></i>THEM<b id="lvlThem" class="lvl"></b></span>
+      <span class="chan"><i id="dotMe" class="dot"></i>ME<b id="lvlMe" class="lvl"></b></span>
+      <button id="answerBtn" class="btn hint" title="Answer the current question (Ctrl+Shift+Space)"><span>Answer</span><kbd>Ctrl+Shift+Space</kbd></button>
+      <button id="chatBtn" class="btn hint" title="Chat / refine the answer (Ctrl+Shift+K)"><span>Chat</span><kbd>Ctrl+Shift+K</kbd></button>
+      <select id="modelSel" title="Model"></select>
+      <span class="menuWrap">
+        <button id="menuBtn" class="btn icon" title="More" aria-haspopup="true" aria-expanded="false">⋮</button>
+        <div id="menu" class="menu hidden" role="menu">
+          <button id="prepBtn" class="mi" role="menuitem">Prepare meeting…</button>
+          <button id="autoBtn" class="mi" role="menuitemcheckbox" aria-checked="true">Auto-answer <span id="autoMark" class="mark on">on</span></button>
+          <button id="clearTopicBtn" class="mi" role="menuitem">Clear topic</button>
+          <button id="screenBtn" class="mi" role="menuitem">Screenshot… <kbd>Ctrl+Alt+S</kbd></button>
+          <button id="notesBtn" class="mi" role="menuitem">Notes</button>
+          <button id="phoneBtn" class="mi" role="menuitem">Phone</button>
+          <button id="liveBtn" class="mi" role="menuitem">Live AI (Nebius): <span id="liveMark" class="mark">–</span></button>
+          <button id="gemBtn" class="mi" role="menuitem">Gemini fallback: <span id="gemMark" class="mark">–</span></button>
+          <button id="budgetBtn" class="mi" role="menuitem">Budget…</button>
+          <button id="opacityBtn" class="mi" role="menuitem">Opacity <kbd>Ctrl+Shift+O</kbd></button>
+          <button id="compactBtn" class="mi" role="menuitemcheckbox" aria-checked="false">Compact mode <span id="compactMark" class="mark">off</span></button>
+          <button id="regenBtn" class="mi" role="menuitem">Regenerate</button>
+          <button id="panicBtn" class="mi" role="menuitem">Panic hide <kbd>Ctrl+Alt+H</kbd></button>
+        </div>
+      </span>
+      <button id="hideBtn" class="btn icon" title="Hide (Ctrl+Shift+H)">–</button>
+      <button id="endBtn" class="btn end" title="End the session">End</button>
+    </header>
+
+    <div id="privacy" class="note hidden"></div>
+    <div id="ctNote" class="note hidden">Click-through is on. Press Ctrl+Shift+C to interact again.</div>
+    <div id="pendingNote" class="note hidden" role="status" aria-live="polite"></div>
+
+    <section id="qstrip" class="panel">
+      <span class="qlabel">THEM</span>
+      <div id="qchips" class="chips"></div>
+      <button id="qClear" class="btn mini" title="Clear the question strip">Clear</button>
+    </section>
+
+    <section id="answer" class="panel">
+      <nav id="histbar">
+        <button id="prevBtn" class="btn icon sm" title="Older answer (Ctrl+Shift+Left)">←</button>
+        <span id="pos" class="pos">–</span>
+        <button id="nextBtn" class="btn icon sm" title="Newer answer (Ctrl+Shift+Right)">→</button>
+        <span id="liveTag" class="livetag hidden">live</span>
+      </nav>
+
+      <div id="body">
+        <main id="scroll">
+          <section id="card" class="card empty">
+            <div id="reqLine" class="req hidden"></div>
+            <div id="qLine" class="q hidden"><span class="lab">Question:</span> <span id="qText"></span></div>
+            <div id="ansLab" class="lab hidden">Answer:</div>
+            <div class="say" id="say">Press Start, then Ctrl+Shift+Space to answer.</div>
+            <ul class="points" id="points"></ul>
+          </section>
+          <div id="ended" class="ended hidden">Session ended</div>
+        </main>
+        <button id="newPill" class="pillbtn hidden">new answer ↓</button>
+      </div>
+
+      <footer id="cardFoot">
+        <span id="meta" class="meta"></span>
+        <span class="spacer"></span>
+        <button id="copyBtn" class="btn mini" title="Copy the answer">Copy</button>
+        <button id="upBtn" class="btn mini" title="Good answer">👍</button>
+        <button id="downBtn" class="btn mini" title="Bad answer">👎</button>
+        <button id="cardClear" class="btn mini" title="Clear this card">Clear</button>
+      </footer>
+
+      <div id="chatBox" class="hidden">
+        <div id="chatChips" class="chips">
+          <button class="chip" data-t="Shorter">Shorter</button>
+          <button class="chip" data-t="More detail">More detail</button>
+          <button class="chip" data-t="Add an example">Add an example</button>
+          <button class="chip" data-t="Simpler words">Simpler words</button>
+          <button class="chip" data-t="Ask them a question back">Ask them a question back</button>
+          <button class="chip" id="deepChip" title="Regenerate with the stronger model when the deep route is enabled and within budget">Deeper answer</button>
+        </div>
+        <input id="chatInput" type="text" autocomplete="off" spellcheck="false" placeholder="Ask or refine… (Enter to send, Esc to close)">
+      </div>
+
+      <div id="notesPanel" class="overlayPanel hidden">
+        <textarea id="notesText" spellcheck="false"></textarea>
+        <div class="row"><button id="notesSave" class="btn primary">Save</button><button id="notesClose" class="btn">Close</button></div>
+      </div>
+      <div id="phonePanel" class="overlayPanel hidden">
+        <div id="phoneBody">Phone mirror not running.</div>
+        <div class="row"><button id="phoneClose" class="btn">Close</button></div>
+      </div>
+      <div id="screenPanel" class="overlayPanel hidden" role="dialog" aria-label="Screen context">
+        <div class="screenHead"><b>Screen context</b> <span id="screenStatus" class="meta">Nothing is sent until you choose.</span></div>
+        <img id="screenImg" alt="Screenshot preview" class="hidden">
+        <input id="screenQ" type="text" autocomplete="off" spellcheck="false" placeholder="Optional: the question to answer (else the last question they asked)">
+        <div class="row">
+          <button id="screenOcrBtn" class="btn" title="Read the text on this PC with Windows OCR; nothing is uploaded">Read text (on this PC)</button>
+          <button id="screenVisionBtn" class="btn" title="Send a downscaled copy to Gemini (free tier: Google may use it)">Describe with Gemini</button>
+        </div>
+        <pre id="screenText" class="screenText hidden"></pre>
+        <div class="row">
+          <button id="screenAnswerBtn" class="btn primary" disabled>Answer with this</button>
+          <button id="screenSaveBtn" class="btn">Save image…</button>
+          <button id="screenDiscardBtn" class="btn">Discard</button>
+        </div>
+      </div>
+      <div id="budgetPanel" class="overlayPanel hidden">
+        <div id="budgetBody">Waiting for budget data…</div>
+        <div class="row"><button id="budgetClose" class="btn">Close</button></div>
+      </div>
+    </section>
+  </div>
+  <script src="overlay-state.js"></script>
+  <script src="budget-view.js"></script>
+  <script src="overlay.js"></script>
+</body>
+</html>

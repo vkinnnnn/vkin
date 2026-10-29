@@ -1,0 +1,19 @@
+Vkin - The Meeting Copilot
+Copyright 2026 Chirag Verma
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+Third-party software
+--------------------
+Vkin depends on third-party open-source packages (listed in package.json, web/package.json and
+server/package.json, and installed from the npm registry). Each package is covered by its own license,
+which ships with the package. No third-party source code is copied into this repository; the native audio
+addon in native/fabel-audio uses only Windows SDK APIs.
+
+Third-party services and trademarks
+-----------------------------------
+Vkin calls hosted AI and infrastructure services over their public APIs. It does not include or
+redistribute any model weights.
+NVIDIA, Nemotron, Nebius, Nebius Token Factory, Deepgram, Google Gemini, Supabase, Cloudflare and Render
+are trademarks of their respective owners. Use of these names describes compatibility only and does not
+imply endorsement.

@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self'">
+  <title>Vkin - Prepare meeting</title>
+  <link rel="stylesheet" href="prep.css">
+</head>
+<body>
+  <div id="layout">
+    <aside id="side">
+      <div class="sideHead">
+        <h1>Meetings</h1>
+        <button id="newBtn" class="btn primary">New</button>
+      </div>
+      <ul id="sessions" class="sessions" aria-label="Meeting sessions"></ul>
+      <div id="loaded" class="loaded"></div>
+      <button id="vkinBtn" class="btn settingsBtn">Copilots &amp; memory</button>
+      <button id="settingsBtn" class="btn settingsBtn">Settings</button>
+    </aside>
+
+    <main id="main">
+      <div id="empty" class="empty">
+        <h2>Prepare a meeting</h2>
+        <p>Create a session, add what you know about them, check it, and activate it. Everything stays on this computer.</p>
+        <button id="emptyNew" class="btn primary">New session</button>
+      </div>
+
+      <form id="newForm" class="card hidden" autocomplete="off">
+        <h2>New session</h2>
+        <div class="grid">
+          <label>Template
+            <select id="nfTemplate"></select>
+          </label>
+          <label>Meeting title <input id="nfTitle" maxlength="120" required></label>
+          <label>Participant <input id="nfPerson" maxlength="120" placeholder="Who you are meeting"></label>
+          <label>Organization <input id="nfOrg" maxlength="120"></label>
+          <label>Date <input id="nfDate" type="date" required></label>
+          <label>Duration (minutes) <input id="nfDuration" type="number" min="5" max="240" value="45"></label>
+        </div>
+        <div class="row"><button class="btn primary" type="submit">Create</button><button id="nfCancel" class="btn" type="button">Cancel</button></div>
+      </form>
+
+      <section id="detail" class="hidden">
+        <header class="detailHead">
+          <div>
+            <h2 id="dTitle"></h2>
+            <div id="dSub" class="sub"></div>
+          </div>
+          <span id="dActive" class="badge hidden">Active</span>
+        </header>
+        <nav class="tabs" role="tablist">
+          <button class="tab on" data-tab="session" role="tab">Session</button>
+          <button class="tab" data-tab="them" role="tab">About them</button>
+          <button class="tab" data-tab="me" role="tab">About me</button>
+          <button class="tab" data-tab="prefs" role="tab">Answer style</button>
+          <button class="tab" data-tab="check" role="tab">Check &amp; activate</button>
+        </nav>
+
+        <div class="pane" data-pane="session">
+          <div class="grid">
+            <label>Meeting title <input id="sTitle" maxlength="120"></label>
+            <label>Participant <input id="sPerson" maxlength="120"></label>
+            <label>Organization <input id="sOrg" maxlength="120"></label>
+            <label>Meeting type <input id="sType" maxlength="80"></label>
+            <label>Date <input id="sDate" type="date"></label>
+            <label>Duration (minutes) <input id="sDuration" type="number" min="5" max="240"></label>
+            <label>Answering
+              <select id="sMode"><option value="auto">Automatic (answer each question)</option><option value="manual">Manual (only when I press Answer)</option></select>
+            </label>
+            <label>Pack expires <input id="sExpires" type="date"></label>
+          </div>
+          <label class="wide">Summary: who they are and what the meeting is for
+            <textarea id="sSummary" rows="6" maxlength="8000"></textarea>
+          </label>
+          <label class="wide">Key terms (names and jargon, comma separated; improves speech recognition)
+            <input id="sKeyterms" maxlength="2000">
+          </label>
+          <div class="info" id="sEstimate"></div>
+          <div class="info" id="sModel"></div>
+          <div class="row"><button id="sSave" class="btn primary">Save</button><span id="sSaved" class="ok"></span></div>
+        </div>
+
+        <div class="pane hidden" data-pane="them">
+          <p class="hint">Documents about the other person: emails, the agenda, a job description, their papers. They are used as sources, never as instructions.</p>
+          <div class="row">
+            <select id="themKind" aria-label="Document type">
+              <option value="correspondence">Correspondence (emails, messages)</option>
+              <option value="logistics">Agenda / logistics</option>
+              <option value="supplementary">Job description / technical document</option>
+              <option value="paper">Research paper</option>
+              <option value="concept">Concept notes</option>
+              <option value="method">Methods notes</option>
+            </select>
+            <button id="themImport" class="btn primary">Import documents…</button>
+          </div>
+          <table class="docs"><thead><tr><th>Document</th><th>Type</th><th>Parts</th><th>Tokens</th><th>Status</th><th></th></tr></thead><tbody id="themDocs"></tbody></table>
+          <h3>Notes about them</h3>
+          <div id="themNotes" class="notes"></div>
+          <div class="noteForm">
+            <select id="themNoteKind" aria-label="Note type"><option value="logistics">Logistics</option><option value="correspondence">What they said</option><option value="supplementary">Background</option></select>
+            <input id="themNoteTitle" placeholder="Title" maxlength="120">
+            <textarea id="themNoteText" rows="2" placeholder="For example: they want someone who can start in January, 20 hours a week."></textarea>
+            <button id="themNoteAdd" class="btn">Add note</button>
+          </div>
+        </div>
+
+        <div class="pane hidden" data-pane="me">
+          <div id="brain" class="info"></div>
+          <p class="hint">Add material for this meeting only (a tailored résumé, project notes, your availability). Imported documents about you are not used as evidence until you mark them verified.</p>
+          <div class="row">
+            <label class="check"><input id="meVerified" type="checkbox"> These documents are accurate and mine</label>
+            <button id="meImport" class="btn primary">Import documents…</button>
+          </div>
+          <table class="docs"><thead><tr><th>Document</th><th>Verified</th><th>Parts</th><th>Tokens</th><th>Status</th><th></th></tr></thead><tbody id="meDocs"></tbody></table>
+          <h3>Notes about me</h3>
+          <div id="meNotes" class="notes"></div>
+          <div class="noteForm">
+            <input id="meNoteTitle" placeholder="Title (for example: Availability)" maxlength="120">
+            <textarea id="meNoteText" rows="2" placeholder="For example: I can start November 3 and work 20 hours a week."></textarea>
+            <button id="meNoteAdd" class="btn">Add note</button>
+          </div>
+          <h3>Restricted facts</h3>
+          <p class="hint">Phrases an answer must never contain in this meeting (matched as whole words).</p>
+          <div id="restricted" class="notes"></div>
+          <div class="noteForm">
+            <input id="rPhrase" placeholder="Phrase (for example: co-authored)" maxlength="200">
+            <input id="rReason" placeholder="Why" maxlength="200">
+            <button id="rAdd" class="btn">Add</button>
+          </div>
+        </div>
+
+        <div class="pane hidden" data-pane="prefs">
+          <div class="grid" id="prefGrid"></div>
+          <div class="row"><button id="pSave" class="btn primary">Save answer style</button><span id="pSaved" class="ok"></span></div>
+          <p class="hint">Saved per meeting. If this meeting is the one loaded now, the new style applies to the next answer.</p>
+        </div>
+
+        <div class="pane hidden" data-pane="check">
+          <div class="row"><button id="vRun" class="btn primary">Check this meeting</button></div>
+          <div id="vResult"></div>
+          <div class="row">
+            <button id="aActivate" class="btn primary">Use this meeting</button>
+            <button id="aRestart" class="btn hidden">Restart now</button>
+            <span id="aMsg" class="sub"></span>
+          </div>
+        </div>
+      </section>
+      <section id="settings" class="hidden">
+        <h2>Settings</h2>
+        <h3>API keys</h3>
+        <p class="hint">Keys can live encrypted for your Windows account (DPAPI) instead of in plain text in .env. Only key names are shown here, never values.</p>
+        <div id="keyStatus" class="info"></div>
+        <div class="row"><button id="keyProtect" class="btn primary">Encrypt keys and remove them from .env</button></div>
+        <h3>Updates</h3>
+        <div id="updStatus" class="info"></div>
+        <div class="row"><button id="updCheck" class="btn">Check for updates</button><button id="updInstall" class="btn primary hidden">Restart to update</button></div>
+      </section>
+      <section id="vkin" class="hidden" aria-labelledby="vkinTitle">
+        <h2 id="vkinTitle">Copilots &amp; memory</h2>
+        <p class="hint">A copilot is a workspace: its purpose, instructions and what it may remember. A thread is one ongoing conversation (one company, one supervisor). Only memory you approve is ever used in answers.</p>
+        <div id="vActive" class="info" role="status"></div>
+        <h3>Account &amp; sync</h3>
+        <div id="vAuth" class="info" role="status"></div>
+        <form id="vSignIn" class="row hidden" autocomplete="off">
+          <input id="vEmail" type="email" placeholder="you@example.com" aria-label="Email" required>
+          <button class="btn" type="submit">Email me a code</button>
+          <input id="vCode" inputmode="numeric" maxlength="6" placeholder="6-digit code" aria-label="Sign-in code">
+          <button id="vVerify" class="btn primary" type="button">Sign in</button>
+        </form>
+        <div id="vSignedIn" class="row hidden">
+          <button id="vSync" class="btn primary">Sync now</button>
+          <label class="check"><input id="vWipe" type="checkbox"> Also clear this account's data from this computer</label>
+          <button id="vSignOut" class="btn">Sign out</button>
+        </div>
+        <div id="vAdopt" class="row hidden">
+          <span id="vAdoptMsg" class="sub"></span>
+          <button id="vAdoptBtn" class="btn">Add them to my account</button>
+          <label class="check"><input id="vAdoptRemove" type="checkbox"> Then remove them from this computer's local copy</label>
+        </div>
+        <h3>Copilots</h3>
+        <ul id="vCopilots" class="sessions" aria-label="Copilots"></ul>
+        <form id="vNewCopilot" class="card" autocomplete="off">
+          <div class="grid">
+            <label>Name <input id="vcName" maxlength="120" required></label>
+            <label>Memory scope
+              <select id="vcScope"><option value="thread">This thread only</option><option value="copilot">All threads of this copilot</option></select>
+            </label>
+            <label class="wide">Purpose <input id="vcPurpose" maxlength="2000" placeholder="e.g. Weekly research meetings with my supervisor"></label>
+            <label class="wide">Instructions <textarea id="vcInstr" maxlength="20000" rows="3" placeholder="How answers should sound, what to emphasise, what to avoid"></textarea></label>
+          </div>
+          <div class="row"><button class="btn primary" type="submit">Create copilot</button></div>
+        </form>
+        <div id="vCopilot" class="hidden">
+          <h3 id="vCopilotName"></h3>
+          <div class="row">
+            <input id="vtTitle" maxlength="200" placeholder="New thread title" aria-label="New thread title">
+            <button id="vtAdd" class="btn">New thread</button>
+            <button id="vUseNew" class="btn">Next meeting: start a new thread</button>
+            <button id="vcDelete" class="btn">Delete copilot</button>
+          </div>
+          <ul id="vThreads" class="sessions" aria-label="Threads"></ul>
+        </div>
+        <div id="vThread" class="hidden">
+          <h3 id="vThreadName"></h3>
+          <div class="row">
+            <button id="vUseThread" class="btn primary">Next meeting: continue this thread</button>
+            <button id="vtDelete" class="btn">Delete thread</button>
+          </div>
+          <h4>Meetings in this thread</h4>
+          <ul id="vSessions" class="memList" aria-label="Meetings"></ul>
+          <h4>Memory waiting for your approval</h4>
+          <ul id="vDrafts" class="memList" aria-label="Memory drafts"></ul>
+          <div class="row"><button id="vApproveAll" class="btn primary">Approve all drafts</button></div>
+          <h4>Approved memory</h4>
+          <ul id="vApproved" class="memList" aria-label="Approved memory"></ul>
+        </div>
+      </section>
+      <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+    </main>
+  </div>
+  <script src="prep.js"></script>
+  <script src="prep-vkin.js"></script>
+</body>
+</html>

@@ -1,0 +1,247 @@
+{
+  "llm": {
+    "provider": "nebius",
+    "providers": {
+      "nebius": {
+        "baseURL": "https://api.tokenfactory.nebius.com/v1/",
+        "keyEnv": "NEBIUS_API_KEY",
+        "models": [
+          "nvidia/Nemotron-3-Ultra-550b-a55b",
+          "Qwen/Qwen3-235B-A22B-Instruct-2507",
+          "deepseek-ai/DeepSeek-V4-Flash-0731",
+          "nvidia/Nemotron-3_5-Lightning",
+          "Qwen/Qwen3-30B-A3B-Instruct-2507"
+        ],
+        "privacyNote": "Nebius Token Factory (paid API)."
+      },
+      "gemini": {
+        "baseURL": "https://generativelanguage.googleapis.com/v1beta/openai/",
+        "keyEnv": "GEMINI_API_KEY",
+        "models": [
+          "gemini-3.5-flash"
+        ],
+        "privacyNote": "Gemini free-tier API: prompts may be used by Google to improve products.",
+        "extraParams": {
+          "reasoning_effort": "none"
+        }
+      }
+    },
+    "model": "nvidia/Nemotron-3_5-Lightning",
+    "temperature": 0.75,
+    "maxTokens": 220,
+    "hedgeMs": 0,
+    "routes": {
+      "utility": "nvidia/Nemotron-3_5-Lightning",
+      "default": "nvidia/Nemotron-3_5-Lightning",
+      "deep": "nvidia/Nemotron-3-Ultra-550b-a55b",
+      "personal": "",
+      "gemini_fallback": "gemini-3.5-flash",
+      "nebius_fallback": "Qwen/Qwen3-235B-A22B-Instruct-2507",
+      "vision": "gemini-3.5-flash"
+    },
+    "geminiFallback": "auto",
+    "geminiReasoning": "low",
+    "enableDeepRoute": true,
+    "firstTokenTimeoutMs": 5000,
+    "requestTimeoutMs": 30000,
+    "deepComplexityThreshold": 0.6,
+    "deepMaxShare": 0.05,
+    "deepMinRemainingUsd": 5,
+    "modelParams": {
+      "nvidia/Nemotron-3-Ultra-550b-a55b": {
+        "extraBody": {
+          "chat_template_kwargs": {
+            "enable_thinking": false
+          }
+        },
+        "note": "Reasoning model: thinking off, or it writes its reasoning as the answer (probe 2026-10-14)."
+      },
+      "nvidia/Nemotron-3_5-Lightning": {
+        "extraBody": {
+          "chat_template_kwargs": {
+            "enable_thinking": false
+          }
+        },
+        "note": "Reasoning model: thinking off (probe 2026-10-14)."
+      },
+      "deepseek-ai/DeepSeek-V4-Flash-0731": {
+        "extraBody": {
+          "chat_template_kwargs": {
+            "thinking": false
+          }
+        },
+        "note": "Hidden reasoning used the whole token budget (empty answers) until thinking was turned off (probe 2026-10-14)."
+      }
+    }
+  },
+  "stt": {
+    "url": "wss://api.deepgram.com/v2/listen",
+    "model": "flux-general-en",
+    "eotThreshold": 0.7,
+    "eagerEotThreshold": 0.5,
+    "eotTimeoutMs": 4000,
+    "keyterms": []
+  },
+  "profile": {
+    "displayName": "",
+    "careerPro": "",
+    "partsDir": "",
+    "alwaysParts": [],
+    "brief": "",
+    "overrides": "profile_overrides.md",
+    "meetingNotes": "meeting.md",
+    "retrievalTokenBudget": 3000,
+    "historyTurns": 8,
+    "replacements": [],
+    "brainV2": true,
+    "detailRecords": true,
+    "restrictedClaims": [],
+    "correctionAliases": [],
+    "excludeRecords": []
+  },
+  "turns": {
+    "minWords": 6,
+    "echoWindowMs": 5000,
+    "echoJaccard": 0.6,
+    "speculativeLlm": false,
+    "mergeWindowMs": 8000
+  },
+  "mirror": {
+    "enabled": true,
+    "port": 8787
+  },
+  "hotkeys": {
+    "answer": "CommandOrControl+Shift+Space",
+    "regenerate": "CommandOrControl+Shift+R",
+    "toggle": "CommandOrControl+Shift+H",
+    "clickThrough": "CommandOrControl+Shift+C",
+    "scrollUp": "CommandOrControl+Shift+Up",
+    "scrollDown": "CommandOrControl+Shift+Down",
+    "opacity": "CommandOrControl+Shift+O",
+    "historyBack": "CommandOrControl+Shift+Left",
+    "historyForward": "CommandOrControl+Shift+Right",
+    "chat": "CommandOrControl+Shift+K",
+    "panic": "CommandOrControl+Alt+H",
+    "screenshot": "CommandOrControl+Alt+S"
+  },
+  "saveTranscripts": false,
+  "budget": {
+    "enabled": true,
+    "dataDir": "data/budget",
+    "pricesFile": "src/main/budget/prices.json",
+    "openingSpentUsd": 0,
+    "nebius": {
+      "totalBudgetUsd": 40,
+      "protectedReserveUsd": 8,
+      "hardStopUsd": 32,
+      "warnUsd": [
+        16,
+        24,
+        28.8
+      ],
+      "safetyMultiplier": 1.2,
+      "dailyRequestLimit": 400,
+      "sessionRequestLimit": 150,
+      "buckets": {
+        "live_dev": 2,
+        "benchmark": 3,
+        "production_test": 5
+      }
+    },
+    "gemini": {
+      "totalBudgetUsd": 0,
+      "hardStopUsd": 0,
+      "safetyMultiplier": 1.2,
+      "dailyRequestLimit": 200,
+      "sessionRequestLimit": 60,
+      "buckets": {
+        "live_dev": 0,
+        "benchmark": 0,
+        "production_test": 0
+      }
+    },
+    "liveCallsEnabledAtStartup": false,
+    "reservationTtlMinutes": 10,
+    "notes": "Opening balance USD 0.00 is a user decision (2026-10-14); earlier untracked testing is estimated at about USD 0.40.",
+    "appBucket": "production_test"
+  },
+  "brain": {
+    "sessionTtlMinutes": 120,
+    "budgets": {
+      "evidenceTokens": 3000,
+      "notesTokens": 400,
+      "transcriptTokens": 500
+    }
+  },
+  "answer": {
+    "mode": "live",
+    "length": "long",
+    "fillerIntensity": "subtle",
+    "maxFillers": 2,
+    "showStarLabels": false,
+    "starSeconds": 80,
+    "wordsPerMinute": 150
+  },
+  "meeting": {
+    "enabled": false,
+    "profile": "",
+    "dir": "meeting-packs",
+    "allowGeneralKnowledge": false,
+    "allowMeetingSources": true,
+    "requirePersonalClaimSources": true,
+    "budgets": {
+      "meetingTokens": 1300,
+      "meetingNotesTokens": 950,
+      "exemplarTokens": 800
+    },
+    "showExamples": false
+  },
+  "validation": {
+    "enabled": true,
+    "regenerate": true,
+    "mode": "stable"
+  },
+  "telemetry": {
+    "enabled": true,
+    "dir": "data/telemetry",
+    "retentionDays": 30
+  },
+  "flags": {
+    "staleTurnGuard": true,
+    "dialogueStateV2": false,
+    "questionInterpreterV2": false,
+    "activeContextV2": false,
+    "evidenceLedger": false,
+    "answerPlanner": false,
+    "noveltyController": false,
+    "preparedAnswersAsEvidence": false,
+    "nativeAudio": false
+  },
+  "audio": {
+    "native": {
+      "aec": true,
+      "ns": false,
+      "agc": false,
+      "aes": 1,
+      "echoLengthMs": 256,
+      "note": "Windows Voice Capture DSP. Probe 2026-10-17 (laptop speakers): aes 0 leaked 18/21 played words into the mic transcript, aes 1-2 leaked 0; noise suppression made it worse (11/21), so ns stays off."
+    }
+  },
+  "updates": {
+    "enabled": false,
+    "url": "",
+    "note": "Installed builds only; electron-updater checks latest.yml (sha512) at this https feed. Off until a signed release pipeline exists."
+  },
+  "ui": {
+    "openPrepOnStart": true,
+    "note": "Open the meeting board (Prepare meeting window) every time the copilot starts."
+  },
+  "hosted": {
+    "enabled": true,
+    "apiUrl": ""
+  },
+  "vkin": {
+    "supabaseUrl": "",
+    "supabaseAnonKey": ""
+  }
+}

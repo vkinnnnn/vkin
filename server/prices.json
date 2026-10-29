@@ -1,0 +1,21 @@
+{
+  "version": "2026-10-14-user",
+  "source": "Copied from src/main/budget/prices.json (Nebius Token Factory catalog, pasted 2026-10-14). test/prices.test.js asserts the entries match.",
+  "currency": "USD",
+  "unit_tokens": 1000000,
+  "providers": {
+    "nebius": {
+      "models": {
+        "nvidia/Nemotron-3_5-Lightning": { "input": 0.06, "output": 0.24 },
+        "nvidia/Nemotron-3-Ultra-550b-a55b": { "input": 1.00, "output": 3.00 },
+        "Qwen/Qwen3-235B-A22B-Instruct-2507": { "input": 0.20, "output": 0.60 }
+      }
+    },
+    "gemini": {
+      "billing": "free_tier_only",
+      "models": {
+        "gemini-3.5-flash": { "input": 0, "output": 0, "free_tier": true }
+      }
+    }
+  }
+}

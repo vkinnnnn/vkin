@@ -1,0 +1,100 @@
+{
+  "name": "meeting-copilot",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Vkin — The Meeting Copilot",
+  "main": "src/main/main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test test/*.test.js",
+    "probe": "node scripts/probe-models.js",
+    "predist:dir": "node scripts/make-defaults.js",
+    "predist": "node scripts/make-defaults.js",
+    "lint": "eslint .",
+    "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.renderer.json",
+    "check": "npm run lint && npm run typecheck && npm test",
+    "build:native": "cd native/fabel-audio && node-gyp rebuild",
+    "audio:probe": "node scripts/audio-probe.js",
+    "dist:dir": "electron-builder --win --dir",
+    "dist": "electron-builder --win nsis"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "2.117.3",
+    "dotenv": "^16.4.5",
+    "electron-updater": "6.8.9",
+    "express": "^4.21.2",
+    "minisearch": "^7.1.1",
+    "openai": "^4.77.0",
+    "pdfjs-dist": "4.10.38",
+    "qrcode": "^1.5.4",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "@types/node": "^20.19.43",
+    "electron": "43.8.4",
+    "electron-builder": "26.15.6",
+    "eslint": "^9.39.5",
+    "globals": "^17.13.0",
+    "typescript": "^5.9.3"
+  },
+  "build": {
+    "appId": "app.vkin.desktop",
+    "productName": "Vkin",
+    "directories": {
+      "output": "dist"
+    },
+    "electronDist": "node_modules/electron/dist",
+    "asar": true,
+    "files": [
+      "src/**/*",
+      "assets/**/*",
+      {
+        "from": "defaults",
+        "to": ".",
+        "filter": [
+          "config.json",
+          "meeting.md",
+          "profile_overrides.md"
+        ]
+      },
+      ".env.example",
+      "package.json",
+      "!src/**/*.d.ts"
+    ],
+    "asarUnpack": [
+      "node_modules/pdfjs-dist/**"
+    ],
+    "extraResources": [
+      {
+        "to": "native/fabel_audio.node",
+        "from": "native/fabel-audio/build/Release/fabel_audio.node"
+      }
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "allowToChangeInstallationDirectory": true
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "category": "public.app-category.productivity"
+    },
+    "publish": [
+      {
+        "url": "https://updates.example.invalid/vkin/",
+        "provider": "generic"
+      }
+    ]
+  },
+  "author": "Chirag Verma"
+}

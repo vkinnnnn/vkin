@@ -1,0 +1,26 @@
+{
+  "version": "2026-10-14-user",
+  "source": "Copied by the maintainer from the Nebius Token Factory catalog on 2026-10-14; not independently verified by the app.",
+  "refreshed_at": "2026-10-14T00:00:00Z",
+  "max_age_days": 30,
+  "currency": "USD",
+  "unit_tokens": 1000000,
+  "providers": {
+    "nebius": {
+      "models": {
+        "nvidia/Nemotron-3_5-Lightning": { "input": 0.06, "output": 0.24 },
+        "deepseek-ai/DeepSeek-V4-Flash-0731": { "input": 0.14, "output": 0.28 },
+        "Qwen/Qwen3-235B-A22B-Instruct-2507": { "input": 0.20, "output": 0.60 },
+        "Qwen/Qwen3-30B-A3B-Instruct-2507": { "input": 0.10, "output": 0.30 },
+        "nvidia/Nemotron-3-Ultra-550b-a55b": { "input": 1.00, "output": 3.00 }
+      }
+    },
+    "gemini": {
+      "billing": "free_tier_declared",
+      "note": "Free-tier key: $0 per token, but every call is still ledgered and capped by request ceilings. Prompts may be used by Google to improve products.",
+      "models": {
+        "gemini-3.5-flash": { "input": 0, "output": 0, "free_tier": true }
+      }
+    }
+  }
+}

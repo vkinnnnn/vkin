@@ -1,0 +1,48 @@
+# Render Blueprint for the Vkin hosted API. In Render: New > Blueprint, pick this repo and set the
+# Blueprint path to server/render.yaml. Secrets are entered in the dashboard (sync: false), never committed.
+services:
+  - type: web
+    name: vkin-api
+    runtime: node
+    plan: starter
+    # Single instance required: the STT relay registry, in-flight chat registry, rate limits and spend
+    # reservations live in process memory. Do not scale out or enable autoscaling.
+    numInstances: 1
+    rootDir: server
+    buildCommand: npm ci --omit=dev
+    startCommand: node src/index.js
+    healthCheckPath: /healthz
+    autoDeploy: false
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: NODE_ENV
+        value: production
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: NEBIUS_API_KEY
+        sync: false
+      - key: NEBIUS_BASE_URL
+        value: https://api.tokenfactory.nebius.com/v1/
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_BASE_URL
+        value: https://generativelanguage.googleapis.com/v1beta/openai/
+      - key: DEEPGRAM_API_KEY
+        sync: false
+      - key: DEEPGRAM_USD_PER_MIN
+        sync: false
+      - key: NEBIUS_SERVER_CAP_USD
+        value: "10"
+      - key: DEEPGRAM_SERVER_CAP_USD
+        value: "10"
+      - key: NEBIUS_USER_CAP_USD
+        value: "0.50"
+      - key: GEMINI_DAILY_REQUEST_CAP
+        value: "300"
+      - key: GEMINI_USER_DAILY_CAP
+        value: "40"
+      - key: CORS_ORIGINS
+        sync: false

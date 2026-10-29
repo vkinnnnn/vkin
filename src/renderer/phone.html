@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="referrer" content="no-referrer">
+<title>Vkin</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: #0b0d10; color: #eef1f5; font: 16px/1.4 -apple-system, system-ui, "Segoe UI", Roboto, sans-serif; }
+  body { padding: max(14px, env(safe-area-inset-top)) 16px max(20px, env(safe-area-inset-bottom)); }
+  #pill { position: fixed; top: 8px; right: 10px; font-size: 12px; padding: 3px 10px; border-radius: 999px; background: #3a2a10; color: #ffcf7a; z-index: 2; }
+  #pill.ok { background: #0f2e1b; color: #7ee2a0; }
+  #card { margin-top: 26px; transition: opacity .2s; }
+  #card.spec, #card.regen { opacity: .55; }
+  #vb { display: none; margin-top: 8px; font-size: 12px; padding: 1px 8px; border-radius: 999px; }
+  #vb.grounded { display: inline-block; color: #7ee2a0; background: #0f2e1b; }
+  #vb.trimmed, #vb.checking { display: inline-block; color: #ffcf7a; background: #3a2a10; }
+  #vb.checking { font-style: italic; }
+  #card.err #say { color: #ff8a8a; }
+  #q { font-size: 13px; color: #8a93a0; margin-bottom: 8px; }
+  #tag { display: none; font-size: 12px; color: #ffcf7a; margin-bottom: 6px; font-style: italic; }
+  #card.spec #tag { display: block; }
+  #say { font-size: 22px; line-height: 1.35; font-weight: 600; white-space: pre-wrap; overflow-wrap: anywhere; }
+  #card.empty #say { color: #8a93a0; font-weight: 400; }
+  #pts { margin: 14px 0 0; padding-left: 22px; font-size: 18px; line-height: 1.4; color: #cfd5de; }
+  #pts li { margin-bottom: 8px; overflow-wrap: anywhere; }
+  #meta { margin-top: 10px; font-size: 12px; color: #6b7480; }
+  details { margin-top: 28px; border-top: 1px solid #222831; padding-top: 12px; color: #8a93a0; }
+  summary { font-size: 13px; cursor: pointer; }
+  #prevSay { margin-top: 8px; font-size: 15px; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<div id="pill">reconnecting</div>
+<div id="card" class="empty">
+  <div id="q"></div>
+  <div id="tag">drafting…</div>
+  <div id="say">Listening…</div>
+  <ul id="pts"></ul>
+  <div id="vb"></div>
+  <div id="meta"></div>
+</div>
+<details id="prev" class="hidden"><summary>Previous answer</summary><div id="prevSay"></div></details>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var ID_RE = /\s*[([]?\b(?:PRJ|EXP|ACA|CERT|AWD|VOL)-\d{3}\b(?:\s*,\s*\b(?:PRJ|EXP|ACA|CERT|AWD|VOL)-\d{3}\b)*[)\]]?:?/g;
+  var SRC_RE = /\[src:[^\]]*\]/gi;
+  function clean(t) { return t.replace(SRC_RE, '').replace(ID_RE, '').replace(/[ \t]{2,}/g, ' '); }
+  function parse(text) {
+    var m = clean(text).split(/\n?\s*POINTS:\s*/i);
+    var say = m[0].replace(/^\s*SAY:\s*/i, '').trim();
+    var points = (m[1] || '').split(/\n/).map(function (l) { return l.replace(/^\s*[-*•]\s*/, '').trim(); }).filter(Boolean);
+    return { say: say, points: points };
+  }
+
+  // Same reducer as src/main/mirror.js reduce() / overlay.js semantics.
+  var state = { current: null, previous: null };
+  function reduceCard(s, msg) {
+    var cur = s.current;
+    if (msg.type === 'snapshot') return { current: msg.current || null, previous: msg.previous || null, maxSeq: msg.maxSeq };
+    if (msg.type === 'answer:start') {
+      var next = { genId: msg.genId, turnId: msg.turnId, revision: msg.revision, kind: msg.kind, question: msg.question, text: '' };
+      // Corrected answer replaces the rejected draft it revises; the draft never becomes `previous`.
+      if (msg.revisionOf != null && cur && cur.genId === msg.revisionOf) return { current: next, previous: s.previous };
+      var previous = cur && !cur.error && cur.kind !== 'speculative' && cur.done ? cur : s.previous;
+      return { current: next, previous: previous };
+    }
+    if (msg.type === 'answer:replace') {
+      if (typeof msg.text !== 'string') return s;
+      var put = function (x) { return x && x.genId === msg.genId ? Object.assign({}, x, { text: msg.text }) : x; };
+      var pc = put(cur), pp = put(s.previous);
+      return pc === cur && pp === s.previous ? s : { current: pc, previous: pp };
+    }
+    if (!cur || cur.genId !== msg.genId) return s;
+    var c = Object.assign({}, cur);
+    switch (msg.type) {
+      case 'answer:delta': c.text += msg.text || ''; break;
+      case 'answer:promote': c.kind = 'confirmed'; break;
+      case 'answer:invalidate': return { current: null, previous: s.previous };
+      case 'answer:validated':
+        c.validation = { ok: msg.ok !== false, action: msg.action || '', unsupported: Array.isArray(msg.unsupported) ? msg.unsupported : [],
+          warnings: msg.warnings || 0, confidence: typeof msg.confidence === 'number' ? msg.confidence : null };
+        break;
+      case 'answer:done':
+        if (cur.validation && cur.validation.action === 'regenerating') return s; // rejected draft never finishes
+        c.done = true; c.timings = msg.timings; break;
+      case 'answer:error': c.error = 'Error: ' + msg.message; break;
+      default: return s;
+    }
+    return { current: c, previous: s.previous };
+  }
+
+  // Stale-turn guard (FABEL_STALE_TURN_GUARD): drop an answer event from an older generation than the
+  // newest seen. Events without a seq (guard off / snapshot) take the unchanged path.
+  function reduce(s, msg) {
+    if (msg && typeof msg.seq === 'number' && typeof s.maxSeq === 'number' && msg.seq < s.maxSeq) return s;
+    var next = reduceCard(s, msg);
+    if (!msg || typeof msg.seq !== 'number') return next;
+    var max = typeof s.maxSeq === 'number' ? Math.max(s.maxSeq, msg.seq) : msg.seq;
+    if (next.maxSeq !== max) next.maxSeq = max;
+    return next;
+  }
+
+  // Same badge rules as OverlayState.validationBadge (text/title only, no innerHTML).
+  function badge(card) {
+    var v = card && card.validation;
+    if (!v) return null;
+    if (v.action === 'regenerating') return { cls: 'checking', text: 'checking facts… rewriting', title: '' };
+    if (v.action === 'improving') return { cls: 'checking', text: '✂ trimmed · improving…', title: '' };
+    if (v.action === 'rewritten') return { cls: 'grounded', text: '✓ grounded (rewritten)', title: '' };
+    if (v.action === 'checked') {
+      var n = v.warnings > 0 ? v.warnings : 0;
+      return { cls: 'grounded', text: '✓ grounded', title: n ? '✓ grounded (' + n + ' note' + (n === 1 ? '' : 's') + ')' : '✓ grounded' };
+    }
+    if (v.action === 'trimmed') {
+      var claims = (v.unsupported || []).map(function (u) { return u.claim; }).filter(Boolean);
+      var lines = claims.slice(0, 5).map(function (t) { return '- ' + (t.length > 80 ? t.slice(0, 79) + '…' : t); });
+      if (claims.length > 5) lines.push('…and ' + (claims.length - 5) + ' more');
+      return { cls: 'trimmed', text: '✂ trimmed unsupported claims', title: ['Removed (not supported by your profile):'].concat(lines).join('\n') };
+    }
+    return null;
+  }
+
+  function render() {
+    var cur = state.current, card = $('card');
+    card.className = 'card';
+    $('pts').textContent = '';
+    if (!cur) {
+      card.className = 'empty';
+      $('q').textContent = '';
+      $('say').textContent = 'Listening…';
+      $('meta').textContent = '';
+    } else {
+      if (cur.kind === 'speculative') card.classList.add('spec');
+      if (cur.error) card.classList.add('err');
+      if (cur.validation && cur.validation.action === 'regenerating') card.classList.add('regen');
+      var p = parse(cur.text || '');
+      $('q').textContent = cur.question ? '“' + cur.question + '”' : '';
+      $('say').textContent = cur.error ? cur.error : p.say || '…';
+      p.points.forEach(function (t) { var li = document.createElement('li'); li.textContent = t; $('pts').appendChild(li); });
+      var tm = cur.timings;
+      $('meta').textContent = tm && tm.eotToFirstTokenMs != null ? 'first token ' + tm.eotToFirstTokenMs + ' ms' : '';
+    }
+    var b = cur && !cur.error ? badge(cur) : null;
+    $('vb').className = b ? b.cls : '';
+    $('vb').textContent = b ? b.text : '';
+    $('vb').title = b ? b.title : '';
+    $('prev').classList.toggle('hidden', !state.previous);
+    if (state.previous) $('prevSay').textContent = parse(state.previous.text || '').say;
+  }
+
+  var tries = 0, ws = null;
+  function pill(ok) { $('pill').textContent = ok ? 'connected' : 'reconnecting'; $('pill').className = ok ? 'ok' : ''; }
+  function connect() {
+    var t = new URLSearchParams(location.search).get('t') || '';
+    try { ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws?t=' + encodeURIComponent(t)); }
+    catch (e) { return retry(); }
+    ws.onopen = function () { tries = 0; pill(true); };
+    ws.onmessage = function (ev) {
+      var msg; try { msg = JSON.parse(ev.data); } catch (e) { return; }
+      state = reduce(state, msg); render();
+    };
+    ws.onclose = retry;
+    ws.onerror = function () { try { ws.close(); } catch (e) { /* ignore */ } };
+  }
+  var timer = null;
+  function retry() {
+    pill(false);
+    if (timer) return;
+    var d = Math.min(8000, 500 * Math.pow(2, tries++)) * (0.75 + Math.random() * 0.5);
+    timer = setTimeout(function () { timer = null; connect(); }, d);
+  }
+
+  var lock = null;
+  function wake() {
+    try {
+      if (navigator.wakeLock && document.visibilityState === 'visible') {
+        navigator.wakeLock.request('screen').then(function (l) { lock = l; }, function () {});
+      }
+    } catch (e) { /* ignore */ }
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible') {
+      wake();
+      if (!ws || ws.readyState > 1) { clearTimeout(timer); timer = null; connect(); }
+    }
+  });
+
+  render();
+  pill(false);
+  connect();
+  wake();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+node_modules/
+.env
+transcripts/
+feedback.jsonl
+data/
+eval/results/
+eval/private/
+/meeting-packs/
+native/fabel-audio/build/
+dist/
+defaults/

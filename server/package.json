@@ -1,0 +1,21 @@
+{
+  "name": "vkin-server",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Vkin hosted API: entitlements, leases, metered chat proxy and Deepgram Flux relay.",
+  "type": "commonjs",
+  "main": "src/index.js",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node --test test/*.test.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "2.117.3",
+    "express": "4.22.3",
+    "openai": "4.104.0",
+    "ws": "8.22.0"
+  }
+}

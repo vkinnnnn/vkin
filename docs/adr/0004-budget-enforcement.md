@@ -1,0 +1,4 @@
+# ADR 0004: Local budget enforcement
+Status: accepted (B1).
+Decision: a guard in the Electron main process admits every billable call against an append-only JSONL ledger (sha256 line checksums) before sending it. Admission reserves worst-case cost ((input + max output) x price x 1.20). Reservations are settled with provider usage when returned, else estimates. Unsettled reservations stay counted (fail safe). Serialization: in-process mutex plus an exclusive lockfile for other processes. Fail closed on unknown/stale/changed price, corrupt or locked ledger, kill switch, hard stop, reserve, bucket, daily or session ceilings. Separate ledger for Gemini. No hedging, no parallel races, no speculative calls; at most one retry for transient errors before any token is shown.
+Not a billing source of truth: provider invoices may differ; set provider-side alerts too.
